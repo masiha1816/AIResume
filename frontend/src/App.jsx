@@ -2,11 +2,15 @@ import { useState } from "react";
 import axios from "axios";
 import "./App.css";
 
+const BACKEND_URL = "https://airesume-14xu.onrender.com";
+
 function App() {
   const [resume, setResume] = useState(null);
   const [jobDescription, setJobDescription] = useState("");
   const [analysis, setAnalysis] = useState(null);
+  const [optimizedResume, setOptimizedResume] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingResume, setLoadingResume] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
   const [step, setStep] = useState("Waiting for your resume...");
 
@@ -58,6 +62,7 @@ function App() {
 
     setLoading(true);
     setAnalysis(null);
+    setOptimizedResume("");
     runLoadingSteps();
 
     const formData = new FormData();
@@ -65,11 +70,7 @@ function App() {
     formData.append("job_description", jobDescription);
 
     try {
-      const response = await axios.post(
-        "https://airesume-14xu.onrender.com/analyze",
-        formData
-      );
-
+      const response = await axios.post(`${BACKEND_URL}/analyze`, formData);
       setAnalysis(response.data);
       setStep("🎉 Aiko finished your analysis!");
       playChime("ding");
@@ -80,6 +81,32 @@ function App() {
     }
 
     setLoading(false);
+  };
+
+  const generateOptimizedResume = async () => {
+    if (!analysis) {
+      alert("Analyze your resume first");
+      return;
+    }
+
+    setLoadingResume(true);
+    setOptimizedResume("");
+    setStep("🦊 Aiko is tailoring your resume...");
+
+    try {
+      const response = await axios.post(`${BACKEND_URL}/generate_resume`, {
+        analysis: analysis,
+        job_description: jobDescription,
+      });
+
+      setOptimizedResume(response.data.resume);
+      playChime("ding");
+    } catch (error) {
+      console.error(error);
+      alert("Error generating optimized resume");
+    }
+
+    setLoadingResume(false);
   };
 
   return (
@@ -101,7 +128,7 @@ function App() {
         <h1>AI Resume Checker</h1>
         <p>
           Let Aiko, your fox spirit career guide, review your resume, match it
-          to a job, and prepare you for your next interview.
+          to a job, and create a personalized resume tailored to the role.
         </p>
       </div>
 
@@ -212,6 +239,31 @@ function App() {
               ))}
             </ol>
           </div>
+
+          <button
+            className="magicButton"
+            onClick={generateOptimizedResume}
+            disabled={loadingResume}
+          >
+            {loadingResume
+              ? "🦊 Aiko is tailoring your resume..."
+              : "✨ Generate Personalized Resume"}
+          </button>
+        </div>
+      )}
+
+      {loadingResume && (
+        <div className="results optimizedResume">
+          <h2>🦊 Aiko is working her magic...</h2>
+          <p>Rewriting your resume to better match the job description.</p>
+          <div className="fox">🦊</div>
+        </div>
+      )}
+
+      {optimizedResume && (
+        <div className="results optimizedResume">
+          <h2>✨ Aiko's Personalized Resume</h2>
+          <pre>{optimizedResume}</pre>
         </div>
       )}
     </div>

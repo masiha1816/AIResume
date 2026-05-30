@@ -374,3 +374,31 @@ li {
     text-align: center;
   }
 }
+.magicButton {
+  margin-top: 20px;
+  background: linear-gradient(90deg, #ec4899, #8b5cf6, #06b6d4);
+}
+
+.optimizedResume pre {
+  white-space: pre-wrap;
+  line-height: 1.7;
+  font-size: 16px;
+  color: #e5e7eb;
+  text-align: left;
+}
+
+.optimizedResume {
+  animation: fadeInUp 0.5s ease-in-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
