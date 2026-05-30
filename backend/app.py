@@ -19,8 +19,7 @@ def extract_text_from_pdf(file):
     pdf = fitz.open(stream=file.read(), filetype="pdf")
 
     for page in pdf:
-        page_text = page.get_text()
-        text += page_text + "\n"
+        text += page.get_text() + "\n"
 
     return text.strip()
 
@@ -55,47 +54,18 @@ Use this exact JSON structure:
 
 {{
   "match_score": 0,
-  "summary": "Short 2-3 sentence summary of the resume fit.",
-  "strengths": [
-    "strength 1",
-    "strength 2",
-    "strength 3"
-  ],
-  "weaknesses": [
-    "weakness 1",
-    "weakness 2",
-    "weakness 3"
-  ],
-  "missing_keywords": [
-    "keyword 1",
-    "keyword 2",
-    "keyword 3"
-  ],
+  "summary": "Short 2-3 sentence summary.",
+  "strengths": ["strength 1", "strength 2", "strength 3"],
+  "weaknesses": ["weakness 1", "weakness 2", "weakness 3"],
+  "missing_keywords": ["keyword 1", "keyword 2", "keyword 3"],
   "salary_estimate": {{
     "low": "$0",
     "high": "$0",
     "reasoning": "Short explanation."
   }},
-  "interview_questions": [
-    "question 1",
-    "question 2",
-    "question 3",
-    "question 4",
-    "question 5"
-  ],
-  "recommended_resume_changes": [
-    "change 1",
-    "change 2",
-    "change 3"
-  ]
+  "interview_questions": ["question 1", "question 2", "question 3", "question 4", "question 5"],
+  "recommended_resume_changes": ["change 1", "change 2", "change 3"]
 }}
-
-Rules:
-- match_score must be a number from 0 to 100.
-- strengths should focus on relevant qualifications.
-- weaknesses should be honest but professional.
-- missing_keywords should come from the job description.
-- recommended_resume_changes should be practical and specific.
 
 Resume:
 {resume_text}
@@ -131,6 +101,54 @@ Job Description:
             }
 
         return jsonify(parsed_output)
+
+    except Exception as e:
+        print("ERROR:", str(e))
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/generate_resume", methods=["POST"])
+def generate_resume():
+    try:
+        data = request.json
+
+        analysis = data.get("analysis", {})
+        job_description = data.get("job_description", "")
+
+        prompt = f"""
+You are an expert resume writer and ATS optimization specialist.
+
+Create a personalized, ATS-friendly resume based on the job description and resume analysis.
+
+Do NOT invent fake companies, fake degrees, fake certifications, or fake years of experience.
+Only improve wording, structure, keywords, and positioning based on the candidate's existing background.
+
+Return the resume in clean plain text.
+
+Include these sections:
+
+1. PROFESSIONAL SUMMARY
+2. CORE SKILLS
+3. EXPERIENCE BULLETS
+4. KEYWORDS ADDED
+5. FINAL ATS NOTES
+
+Resume Analysis:
+{json.dumps(analysis, indent=2)}
+
+Job Description:
+{job_description}
+"""
+
+        response = client.chat.completions.create(
+            model="gpt-4.1-mini",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.3,
+        )
+
+        return jsonify({
+            "resume": response.choices[0].message.content
+        })
 
     except Exception as e:
         print("ERROR:", str(e))
