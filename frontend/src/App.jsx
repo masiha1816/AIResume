@@ -310,6 +310,24 @@ function App() {
           <pre>{optimizedResume}</pre>
         </div>
       )}
+      <footer className="footer">
+        <p>
+AI Resume Checker Portfolio Project
+</p>
+        <h3> Created by Nargess Hassani</h3>
+
+        <p>
+          Business Analytics • Artificial Intelligence • Data Analytics
+        </p>
+
+        <a
+          href="https://www.linkedin.com/in/nargess-hassani/"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Connect on LinkedIn
+        </a>
+      </footer>
     </div>
   );
 }

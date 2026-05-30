@@ -402,3 +402,19 @@ li {
     transform: translateY(0);
   }
 }
+.footer {
+  margin-top: 50px;
+  text-align: center;
+  padding: 30px;
+  border-top: 1px solid rgba(255,255,255,0.15);
+}
+
+.footer a {
+  color: #7dd3fc;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.footer a:hover {
+  text-decoration: underline;
+}
