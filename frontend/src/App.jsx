@@ -109,6 +109,36 @@ function App() {
     setLoadingResume(false);
   };
 
+  const downloadResume = async () => {
+    if (!optimizedResume) {
+      alert("Generate a personalized resume first");
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        `${BACKEND_URL}/download_resume`,
+        { resume: optimizedResume },
+        { responseType: "blob" }
+      );
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.setAttribute("download", "Aiko_Optimized_Resume.docx");
+
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error(error);
+      alert("Error downloading resume");
+    }
+  };
+
   return (
     <div className="app">
       <button className="soundToggle" onClick={() => setSoundOn(!soundOn)}>
@@ -263,6 +293,11 @@ function App() {
       {optimizedResume && (
         <div className="results optimizedResume">
           <h2>✨ Aiko's Personalized Resume</h2>
+
+          <button className="magicButton" onClick={downloadResume}>
+            📄 Download as DOCX
+          </button>
+
           <pre>{optimizedResume}</pre>
         </div>
       )}

@@ -1,10 +1,12 @@
 import os
 import json
 import fitz
-from flask import Flask, request, jsonify
+from io import BytesIO
+from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 from dotenv import load_dotenv
 from openai import OpenAI
+from docx import Document
 
 load_dotenv()
 
@@ -38,23 +40,18 @@ def analyze_resume():
         resume_file = request.files["resume"]
         job_description = request.form.get("job_description", "")
 
-        if not job_description.strip():
-            return jsonify({"error": "No job description provided"}), 400
-
         resume_text = extract_text_from_pdf(resume_file)
 
         prompt = f"""
 You are an expert resume reviewer, ATS analyst, recruiter, and career coach.
 
-Analyze the resume against the job description.
+Return ONLY valid JSON. No markdown. No backticks.
 
-Return ONLY valid JSON. Do not include markdown. Do not include backticks.
-
-Use this exact JSON structure:
+Use this structure:
 
 {{
   "match_score": 0,
-  "summary": "Short 2-3 sentence summary.",
+  "summary": "Short summary.",
   "strengths": ["strength 1", "strength 2", "strength 3"],
   "weaknesses": ["weakness 1", "weakness 2", "weakness 3"],
   "missing_keywords": ["keyword 1", "keyword 2", "keyword 3"],
@@ -111,7 +108,6 @@ Job Description:
 def generate_resume():
     try:
         data = request.json
-
         analysis = data.get("analysis", {})
         job_description = data.get("job_description", "")
 
@@ -121,11 +117,10 @@ You are an expert resume writer and ATS optimization specialist.
 Create a personalized, ATS-friendly resume based on the job description and resume analysis.
 
 Do NOT invent fake companies, fake degrees, fake certifications, or fake years of experience.
-Only improve wording, structure, keywords, and positioning based on the candidate's existing background.
 
 Return the resume in clean plain text.
 
-Include these sections:
+Include:
 
 1. PROFESSIONAL SUMMARY
 2. CORE SKILLS
@@ -146,9 +141,43 @@ Job Description:
             temperature=0.3,
         )
 
-        return jsonify({
-            "resume": response.choices[0].message.content
-        })
+        return jsonify({"resume": response.choices[0].message.content})
+
+    except Exception as e:
+        print("ERROR:", str(e))
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/download_resume", methods=["POST"])
+def download_resume():
+    try:
+        data = request.json
+        resume_text = data.get("resume", "")
+
+        document = Document()
+
+        for line in resume_text.split("\n"):
+            clean_line = line.strip()
+
+            if not clean_line:
+                document.add_paragraph("")
+            elif clean_line.isupper() and len(clean_line) < 40:
+                document.add_heading(clean_line, level=2)
+            elif clean_line.startswith("-"):
+                document.add_paragraph(clean_line[1:].strip(), style="List Bullet")
+            else:
+                document.add_paragraph(clean_line)
+
+        file_stream = BytesIO()
+        document.save(file_stream)
+        file_stream.seek(0)
+
+        return send_file(
+            file_stream,
+            as_attachment=True,
+            download_name="Aiko_Optimized_Resume.docx",
+            mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        )
 
     except Exception as e:
         print("ERROR:", str(e))
