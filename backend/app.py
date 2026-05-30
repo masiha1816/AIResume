@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import fitz
 from io import BytesIO
@@ -24,6 +25,34 @@ def extract_text_from_pdf(file):
         text += page.get_text() + "\n"
 
     return text.strip()
+
+
+def extract_contact_info(resume_text):
+    lines = [line.strip() for line in resume_text.split("\n") if line.strip()]
+
+    email_match = re.search(r"[\w\.-]+@[\w\.-]+\.\w+", resume_text)
+    phone_match = re.search(r"(\+?\d[\d\s\-\(\)]{8,}\d)", resume_text)
+    linkedin_match = re.search(r"(https?://)?(www\.)?linkedin\.com/[^\s]+", resume_text, re.I)
+
+    possible_name = "Candidate"
+    for line in lines[:8]:
+        if (
+            len(line.split()) >= 2
+            and len(line.split()) <= 4
+            and "@" not in line
+            and not any(char.isdigit() for char in line)
+            and "linkedin" not in line.lower()
+            and "resume" not in line.lower()
+        ):
+            possible_name = line
+            break
+
+    return {
+        "name": possible_name,
+        "email": email_match.group(0) if email_match else "",
+        "phone": phone_match.group(0) if phone_match else "",
+        "linkedin": linkedin_match.group(0) if linkedin_match else "",
+    }
 
 
 @app.route("/")
@@ -96,7 +125,7 @@ Job Description:
                 "interview_questions": [],
                 "recommended_resume_changes": []
             }
-
+        parsed_output["resume_text"] = resume_text
         return jsonify(parsed_output)
 
     except Exception as e:
@@ -108,25 +137,43 @@ Job Description:
 def generate_resume():
     try:
         data = request.json
+
         analysis = data.get("analysis", {})
         job_description = data.get("job_description", "")
+        resume_text = data.get("resume_text", "")
+
+        contact_info = extract_contact_info(resume_text) if resume_text else {
+            "name": "Candidate",
+            "email": "",
+            "phone": "",
+            "linkedin": "",
+        }
 
         prompt = f"""
 You are an expert resume writer and ATS optimization specialist.
 
 Create a personalized, ATS-friendly resume based on the job description and resume analysis.
 
+Use this candidate contact information if available:
+Name: {contact_info["name"]}
+Phone: {contact_info["phone"]}
+Email: {contact_info["email"]}
+LinkedIn: {contact_info["linkedin"]}
+
+Do NOT use placeholders like [Full Name], [Phone Number], [Email Address], or [LinkedIn URL].
 Do NOT invent fake companies, fake degrees, fake certifications, or fake years of experience.
+Only improve wording, structure, keywords, and positioning based on the candidate's existing background.
 
 Return the resume in clean plain text.
 
 Include:
 
-1. PROFESSIONAL SUMMARY
-2. CORE SKILLS
-3. EXPERIENCE BULLETS
-4. KEYWORDS ADDED
-5. FINAL ATS NOTES
+1. CONTACT INFORMATION
+2. PROFESSIONAL SUMMARY
+3. CORE SKILLS
+4. EXPERIENCE BULLETS
+5. KEYWORDS ADDED
+6. FINAL ATS NOTES
 
 Resume Analysis:
 {json.dumps(analysis, indent=2)}
@@ -161,7 +208,7 @@ def download_resume():
 
             if not clean_line:
                 document.add_paragraph("")
-            elif clean_line.isupper() and len(clean_line) < 40:
+            elif clean_line.isupper() and len(clean_line) < 45:
                 document.add_heading(clean_line, level=2)
             elif clean_line.startswith("-"):
                 document.add_paragraph(clean_line[1:].strip(), style="List Bullet")

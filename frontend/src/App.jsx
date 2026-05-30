@@ -9,6 +9,7 @@ function App() {
   const [jobDescription, setJobDescription] = useState("");
   const [analysis, setAnalysis] = useState(null);
   const [optimizedResume, setOptimizedResume] = useState("");
+  const [resumeText, setResumeText] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingResume, setLoadingResume] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
@@ -63,6 +64,7 @@ function App() {
     setLoading(true);
     setAnalysis(null);
     setOptimizedResume("");
+    setResumeText("");
     runLoadingSteps();
 
     const formData = new FormData();
@@ -71,7 +73,13 @@ function App() {
 
     try {
       const response = await axios.post(`${BACKEND_URL}/analyze`, formData);
+
       setAnalysis(response.data);
+
+      if (response.data.resume_text) {
+        setResumeText(response.data.resume_text);
+      }
+
       setStep("🎉 Aiko finished your analysis!");
       playChime("ding");
     } catch (error) {
@@ -97,6 +105,7 @@ function App() {
       const response = await axios.post(`${BACKEND_URL}/generate_resume`, {
         analysis: analysis,
         job_description: jobDescription,
+        resume_text: resumeText,
       });
 
       setOptimizedResume(response.data.resume);
