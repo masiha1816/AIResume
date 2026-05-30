@@ -7,6 +7,43 @@ function App() {
   const [jobDescription, setJobDescription] = useState("");
   const [analysis, setAnalysis] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [soundOn, setSoundOn] = useState(true);
+  const [step, setStep] = useState("Waiting for your resume...");
+
+  const playChime = (type = "ding") => {
+    if (!soundOn) return;
+
+    const audio = new AudioContext();
+    const oscillator = audio.createOscillator();
+    const gain = audio.createGain();
+
+    oscillator.connect(gain);
+    gain.connect(audio.destination);
+
+    oscillator.type = "sine";
+    oscillator.frequency.value = type === "swish" ? 520 : 760;
+    gain.gain.value = 0.04;
+
+    oscillator.start();
+    oscillator.stop(audio.currentTime + 0.15);
+  };
+
+  const runLoadingSteps = () => {
+    const steps = [
+      { text: "🦊 Reading your resume...", sound: "ding" },
+      { text: "🎐 Matching your skills...", sound: "swish" },
+      { text: "✨ Calculating ATS score...", sound: "ding" },
+      { text: "🐾 Preparing interview questions...", sound: "swish" },
+      { text: "🌸 Aiko is polishing your results...", sound: "ding" },
+    ];
+
+    steps.forEach((item, index) => {
+      setTimeout(() => {
+        setStep(item.text);
+        playChime(item.sound);
+      }, index * 1200);
+    });
+  };
 
   const analyzeResume = async () => {
     if (!resume) {
@@ -14,8 +51,14 @@ function App() {
       return;
     }
 
+    if (!jobDescription.trim()) {
+      alert("Paste a job description first");
+      return;
+    }
+
     setLoading(true);
     setAnalysis(null);
+    runLoadingSteps();
 
     const formData = new FormData();
     formData.append("resume", resume);
@@ -28,9 +71,12 @@ function App() {
       );
 
       setAnalysis(response.data);
+      setStep("🎉 Aiko finished your analysis!");
+      playChime("ding");
     } catch (error) {
       console.error(error);
       alert("Error analyzing resume");
+      setStep("Something went wrong.");
     }
 
     setLoading(false);
@@ -38,13 +84,24 @@ function App() {
 
   return (
     <div className="app">
+      <button className="soundToggle" onClick={() => setSoundOn(!soundOn)}>
+        {soundOn ? "🔊 Sound On" : "🔇 Sound Off"}
+      </button>
+
+      <div className="particles">
+        <span>🌸</span>
+        <span>✨</span>
+        <span>🎐</span>
+        <span>🐾</span>
+        <span>🌙</span>
+      </div>
+
       <div className="hero">
-        <div className="badge">AI Powered Resume Analyzer</div>
+        <div className="badge">🦊 AikoFox AI</div>
         <h1>AI Resume Checker</h1>
         <p>
-          Upload your resume, paste a job description, and get an instant match
-          score, missing keywords, strengths, weaknesses, salary estimate, and
-          interview questions.
+          Let Aiko, your fox spirit career guide, review your resume, match it
+          to a job, and prepare you for your next interview.
         </p>
       </div>
 
@@ -66,13 +123,33 @@ function App() {
         />
 
         <button onClick={analyzeResume} disabled={loading}>
-          {loading ? "Analyzing..." : "Analyze Resume"}
+          {loading ? "Aiko is analyzing..." : "Analyze Resume"}
         </button>
+
+        {loading && (
+          <div className="aikoLoading">
+            <div className="fox">🦊</div>
+            <p>{step}</p>
+            <div className="dots">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
+        )}
       </div>
 
       {analysis && (
         <div className="results">
-          <h2>ATS Match Score: {analysis.match_score}%</h2>
+          <h2>🦊 Aiko's Resume Analysis</h2>
+
+          <div className="scoreBox">
+            <div className="scoreCircle">{analysis.match_score}%</div>
+            <div>
+              <h3>ATS Match Score</h3>
+              <p>{analysis.summary}</p>
+            </div>
+          </div>
 
           <div className="scoreBar">
             <div
@@ -81,42 +158,37 @@ function App() {
             ></div>
           </div>
 
-          <div className="section">
-            <h3>Summary</h3>
-            <p>{analysis.summary}</p>
-          </div>
-
           <div className="grid">
             <div className="miniCard">
-              <h3>Strengths</h3>
+              <h3>✅ Strengths</h3>
               <ul>
-                {analysis.strengths?.map((item, index) => (
-                  <li key={index}>✅ {item}</li>
+                {analysis.strengths?.map((item, i) => (
+                  <li key={i}>{item}</li>
                 ))}
               </ul>
             </div>
 
             <div className="miniCard">
-              <h3>Weaknesses</h3>
+              <h3>⚠️ Weaknesses</h3>
               <ul>
-                {analysis.weaknesses?.map((item, index) => (
-                  <li key={index}>⚠️ {item}</li>
+                {analysis.weaknesses?.map((item, i) => (
+                  <li key={i}>{item}</li>
                 ))}
               </ul>
             </div>
           </div>
 
           <div className="section">
-            <h3>Missing Keywords</h3>
+            <h3>🏷 Missing Keywords</h3>
             <div className="keywords">
-              {analysis.missing_keywords?.map((item, index) => (
-                <span key={index}>{item}</span>
+              {analysis.missing_keywords?.map((item, i) => (
+                <span key={i}>{item}</span>
               ))}
             </div>
           </div>
 
           <div className="section">
-            <h3>Salary Estimate</h3>
+            <h3>💰 Salary Estimate</h3>
             <p className="salary">
               {analysis.salary_estimate?.low} - {analysis.salary_estimate?.high}
             </p>
@@ -124,19 +196,19 @@ function App() {
           </div>
 
           <div className="section">
-            <h3>Recommended Resume Changes</h3>
+            <h3>🚀 Recommended Resume Changes</h3>
             <ul>
-              {analysis.recommended_resume_changes?.map((item, index) => (
-                <li key={index}>🚀 {item}</li>
+              {analysis.recommended_resume_changes?.map((item, i) => (
+                <li key={i}>{item}</li>
               ))}
             </ul>
           </div>
 
           <div className="section">
-            <h3>Interview Questions</h3>
+            <h3>🎤 Interview Questions</h3>
             <ol>
-              {analysis.interview_questions?.map((item, index) => (
-                <li key={index}>{item}</li>
+              {analysis.interview_questions?.map((item, i) => (
+                <li key={i}>{item}</li>
               ))}
             </ol>
           </div>
