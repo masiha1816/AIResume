@@ -5,7 +5,7 @@ import "./App.css";
 function App() {
   const [resume, setResume] = useState(null);
   const [jobDescription, setJobDescription] = useState("");
-  const [analysis, setAnalysis] = useState("");
+  const [analysis, setAnalysis] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const analyzeResume = async () => {
@@ -15,7 +15,7 @@ function App() {
     }
 
     setLoading(true);
-    setAnalysis("");
+    setAnalysis(null);
 
     const formData = new FormData();
     formData.append("resume", resume);
@@ -27,7 +27,7 @@ function App() {
         formData
       );
 
-      setAnalysis(response.data.analysis);
+      setAnalysis(response.data);
     } catch (error) {
       console.error(error);
       alert("Error analyzing resume");
@@ -72,8 +72,74 @@ function App() {
 
       {analysis && (
         <div className="results">
-          <h2>Resume Analysis</h2>
-          <pre>{analysis}</pre>
+          <h2>ATS Match Score: {analysis.match_score}%</h2>
+
+          <div className="scoreBar">
+            <div
+              className="scoreFill"
+              style={{ width: `${analysis.match_score || 0}%` }}
+            ></div>
+          </div>
+
+          <div className="section">
+            <h3>Summary</h3>
+            <p>{analysis.summary}</p>
+          </div>
+
+          <div className="grid">
+            <div className="miniCard">
+              <h3>Strengths</h3>
+              <ul>
+                {analysis.strengths?.map((item, index) => (
+                  <li key={index}>✅ {item}</li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="miniCard">
+              <h3>Weaknesses</h3>
+              <ul>
+                {analysis.weaknesses?.map((item, index) => (
+                  <li key={index}>⚠️ {item}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          <div className="section">
+            <h3>Missing Keywords</h3>
+            <div className="keywords">
+              {analysis.missing_keywords?.map((item, index) => (
+                <span key={index}>{item}</span>
+              ))}
+            </div>
+          </div>
+
+          <div className="section">
+            <h3>Salary Estimate</h3>
+            <p className="salary">
+              {analysis.salary_estimate?.low} - {analysis.salary_estimate?.high}
+            </p>
+            <p>{analysis.salary_estimate?.reasoning}</p>
+          </div>
+
+          <div className="section">
+            <h3>Recommended Resume Changes</h3>
+            <ul>
+              {analysis.recommended_resume_changes?.map((item, index) => (
+                <li key={index}>🚀 {item}</li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="section">
+            <h3>Interview Questions</h3>
+            <ol>
+              {analysis.interview_questions?.map((item, index) => (
+                <li key={index}>{item}</li>
+              ))}
+            </ol>
+          </div>
         </div>
       )}
     </div>

@@ -142,3 +142,54 @@ button:disabled {
     padding: 22px;
   }
 }
+.scoreBar {
+  width: 100%;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 28px;
+}
+
+.scoreFill {
+  height: 100%;
+  background: linear-gradient(90deg, #ef4444, #facc15, #22c55e);
+  border-radius: 999px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.miniCard,
+.section {
+  background: rgba(255, 255, 255, 0.08);
+  padding: 22px;
+  border-radius: 18px;
+  margin-top: 18px;
+}
+
+.keywords {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.keywords span {
+  background: rgba(6, 182, 212, 0.18);
+  border: 1px solid rgba(6, 182, 212, 0.45);
+  padding: 8px 12px;
+  border-radius: 999px;
+}
+
+.salary {
+  font-size: 26px;
+  font-weight: 800;
+  color: #67e8f9;
+}
+
+li {
+  margin-bottom: 10px;
+}
