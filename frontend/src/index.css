@@ -109,3 +109,33 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+.results {
+  text-align: left;
+}
+
+.results h2,
+.results h3 {
+  text-align: center;
+}
+
+.scoreBox p {
+  text-align: center;
+}
+
+.miniCard ul,
+.section ul,
+.section ol {
+  padding-left: 22px;
+  text-align: left;
+}
+
+.miniCard li,
+.section li {
+  text-align: left;
+  line-height: 1.6;
+}
+
+.section p {
+  text-align: center;
+  line-height: 1.6;
+}
