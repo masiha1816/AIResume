@@ -167,7 +167,6 @@ https://www.linkedin.com/in/nargess-hassani/
 
 ---
 
-## <img width="1710" height="964" alt="Screenshot 2026-06-01 at 22 34 20" src="https://github.com/user-attachments/assets/c57f5e5c-bde5-4892-834c-8ef11f738c81" />
- Acknowledgements
+## Acknowledgements
 
 This project was built as a portfolio project to gain hands-on experience in Artificial Intelligence, Full-Stack Development, and Cloud Deployment while solving a real-world career development problem.
